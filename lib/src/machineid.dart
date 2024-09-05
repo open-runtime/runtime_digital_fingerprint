@@ -1,5 +1,7 @@
 import 'dart:io' show Platform, Process, ProcessResult;
 
+import 'regexp_apis.dart';
+
 /// regex for 8-4-4-4-12 format of UUID
 ///
 /// https://en.wikipedia.org/wiki/Universally_unique_identifier#Textual_representation
@@ -51,23 +53,7 @@ abstract class MachineId {
 
       RegExp regExp = RegExp('"IOPlatformUUID" = "($_uuidRegexStr)"');
 
-      RegExpMatch? match = regExp.firstMatch(stdout);
-
-      if (match == null) {
-        throw StateError('match is null');
-      }
-
-      if (match.groupCount != 1) {
-        throw StateError('match.groupCount is not 1: ${match.groupCount}');
-      }
-
-      String? m = match.group(1);
-
-      if (m == null) {
-        throw StateError('match group 1 is null');
-      }
-
-      return m;
+      return regExp.onlyMatch(stdout);
 
     } else if (Platform.isLinux) {
 
@@ -82,23 +68,7 @@ abstract class MachineId {
 
       RegExp regExp = RegExp(r'([a-z0-9]{32})');
 
-      RegExpMatch? match = regExp.firstMatch(stdout);
-
-      if (match == null) {
-        throw StateError('match is null');
-      }
-
-      if (match.groupCount != 1) {
-        throw StateError('match.groupCount is not 1: ${match.groupCount}');
-      }
-
-      String? m = match.group(1);
-
-      if (m == null) {
-        throw StateError('match group 1 is null');
-      }
-
-      return m;
+      return regExp.onlyMatch(stdout);
 
     } else if (Platform.isWindows) {
 
@@ -113,23 +83,7 @@ abstract class MachineId {
 
       RegExp regExp = RegExp('MachineGuid    REG_SZ    ($_uuidRegexStr)');
 
-      RegExpMatch? match = regExp.firstMatch(stdout);
-
-      if (match == null) {
-        throw StateError('match is null');
-      }
-
-      if (match.groupCount != 1) {
-        throw StateError('match.groupCount is not 1: ${match.groupCount}');
-      }
-
-      String? m = match.group(1);
-
-      if (m == null) {
-        throw StateError('match group 1 is null');
-      }
-
-      return m;
+      return regExp.onlyMatch(stdout);
 
     } else {
       throw UnsupportedError('unhandled platform: ${Platform.operatingSystem}');
