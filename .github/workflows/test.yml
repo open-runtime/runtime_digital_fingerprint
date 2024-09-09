@@ -2,7 +2,7 @@ name: test on multiple platforms
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "**" ]
 
 jobs:
   test:
