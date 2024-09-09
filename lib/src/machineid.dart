@@ -6,7 +6,7 @@ import 'dart:io' show Platform, Process, ProcessResult;
 const String _uuidRegex = r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}';
 
 /// A unique identifier for this machine.
-class MachineId {
+abstract class MachineId {
 
   /// A unique identifier for this machine.
   static Future<String> machineId() async {
