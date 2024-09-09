@@ -3,12 +3,16 @@ import 'dart:io' show Platform, Process, ProcessResult;
 /// regex for 8-4-4-4-12 format of UUID
 ///
 /// https://en.wikipedia.org/wiki/Universally_unique_identifier#Textual_representation
-const String _uuidRegex = r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}';
+const String _uuidRegexStr = r'[a-zA-Z0-9]{8}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{12}';
 
 /// A unique identifier for this machine.
 abstract class MachineId {
 
   /// A unique identifier for this machine.
+  ///
+  /// Throws [StateError] on error.
+  ///
+  /// See README for implementation details
   static Future<String> machineId() async {
 
     //
@@ -25,14 +29,12 @@ abstract class MachineId {
     //
     // from [Platform.operatingSystem]
     //
-    // See README for implementation details
-    //
     if (Platform.isMacOS) {
 
       ProcessResult result = await Process.run('ioreg', ['-rd1', '-c', 'IOPlatformExpertDevice']);
 
       if (result.exitCode != 0) {
-        throw StateError('Process.run failed for ioreg: ${result.exitCode}');
+        throw StateError('Unexpected exit code. exitCode: ${result.exitCode} stderr: ${result.stderr} stdout: ${result.stdout}');
       }
 
       // output is something like:
@@ -47,7 +49,7 @@ abstract class MachineId {
       // result.stdout is actually dynamic
       String stdout = result.stdout;
 
-      RegExp regExp = RegExp('"IOPlatformUUID" = "($_uuidRegex)"');
+      RegExp regExp = RegExp('"IOPlatformUUID" = "($_uuidRegexStr)"');
 
       RegExpMatch? match = regExp.firstMatch(stdout);
 
@@ -72,7 +74,7 @@ abstract class MachineId {
       ProcessResult result = await Process.run('cat', ['/var/lib/dbus/machine-id']);
 
       if (result.exitCode != 0) {
-        throw StateError('Process.run failed for cat: ${result.exitCode}');
+        throw StateError('Unexpected exit code. exitCode: ${result.exitCode} stderr: ${result.stderr} stdout: ${result.stdout}');
       }
 
       // result.stdout is actually dynamic
@@ -103,13 +105,13 @@ abstract class MachineId {
       ProcessResult result = await Process.run('reg', ['query', r'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography', '/v', 'MachineGuid']);
 
       if (result.exitCode != 0) {
-        throw StateError('Process.run failed for reg: ${result.exitCode}');
+        throw StateError('Unexpected exit code. exitCode: ${result.exitCode} stderr: ${result.stderr} stdout: ${result.stdout}');
       }
 
       // result.stdout is actually dynamic
       String stdout = result.stdout;
 
-      RegExp regExp = RegExp('MachineGuid    REG_SZ    ($_uuidRegex)');
+      RegExp regExp = RegExp('MachineGuid    REG_SZ    ($_uuidRegexStr)');
 
       RegExpMatch? match = regExp.firstMatch(stdout);
 
@@ -129,21 +131,8 @@ abstract class MachineId {
 
       return m;
 
-    } else if (Platform.isAndroid) {
-
-      throw UnimplementedError('machineId not yet implemented for Android');
-
-    } else if (Platform.isIOS) {
-
-      throw UnimplementedError('machineId not yet implemented for iOS');
-
-    } else if (Platform.isFuchsia) {
-
-      throw UnimplementedError('machineId not yet implemented for Fuchsia');
-
     } else {
-
-      throw UnsupportedError('unhandled platform');
+      throw UnsupportedError('unhandled platform: ${Platform.operatingSystem}');
     }
   }
 }
