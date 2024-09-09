@@ -6,3 +6,4 @@ library;
 export 'src/hardware.dart';
 export 'src/machineid.dart';
 export 'src/memory_amount.dart';
+export 'src/network.dart';
