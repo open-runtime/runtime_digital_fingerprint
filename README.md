@@ -5,10 +5,13 @@ A Dart package for fingerprinting machines.
 
 ## Overview
 
-This Dart package provides a solution for the problem of fingerprinting devices. Different pieces of information can be
-used to identify devices. Some of these are MAC address, serial numbers assigned to hardware, and IP address. None of
-these single pieces of information provides a guarantee of uniqueness, but if used together, then you may have higher
-confidence of uniqueness.
+This Dart package provides a solution for the problem of fingerprinting devices. Different pieces of information may be
+used to identify devices. Some of these pieces of information are:
+* Unique IDs assigned at the time of OS installation
+* specific combinations of hardware such as CPU, memory, and GPU
+
+None of these single pieces of information provides a guarantee of uniqueness, but if used together, then you may have
+higher confidence of uniqueness.
 
 
 ## Uses
@@ -43,7 +46,13 @@ dependencies:
 Import the `runtime_digital_fingerprint` package in your code and call the method that you want.
 
 The list of currently available fingerprinting methods is:
-* MachineID: a UUID that is generated at system install time
+* MachineID: a UUID that is generated at operating system install time. This value is sufficient for identifying machines in all non-pathological cases (see Unique Key Reliability section below)
+* CPU: a string that describes the machine's CPU
+* Memory: the amount of physical memory installed in this machine
+* GPU: a string that describes the machine's GPU, or null if no GPU could be found
+* MAC address: a string that represents the machine's MAC address
+* IP address: a string that represents the machine's IP address
+
 
 ```dart
 import 'package:runtime_digital_fingerprint/runtime_digital_fingerprint.dart';
@@ -63,6 +72,68 @@ The machineId for this machine is: 827AA042-5900-5208-9D1A-308FAF23E12A
 ## Tests
 
 Run `dart test` or use the GitHub Actions workflow to run on multiple platforms.
+
+`runtime_digital_fingerprint` has been tested on all supported platforms: macOS (macOS Sonoma), Linux (Ubuntu 22.04.2,
+Fedora 38, Debian GNU Linux 12), and Windows (Windows 11).
+
+
+## Implementation details for runtime_digital_fingerprint
+
+Various command-line tools and resources are used to gather information about the machine.
+
+On macOS, these are:
+* system_profiler
+* ioreg
+* networksetup
+
+On Linux, these are:
+* /proc/meminfo
+* lspci
+* lscpu
+* /var/lib/dbus/machine-id
+* ifconfig
+
+On Windows, these are:
+* systeminfo
+* wmic
+* reg
+* ipconfig
+* getmac
+
+### Why not use lshw?
+
+`lshw` may be used to get information about memory and GPU on Linux, but it is not installed by default on all versions
+of Linux.
+
+
+## Implementation details for MAC address
+
+On macOS, the strategy to determine MAC address is to first look for a Wi-Fi interface. Then, if no Wi-Fi interface is
+found, then look for an Ethernet interface.
+
+### Can a device's MAC address be used for fingerprinting?
+
+Due to many reasons:
+* [randomization](https://en.wikipedia.org/wiki/MAC_address#Randomization)
+* the ability of a user to [change](https://en.wikipedia.org/wiki/MAC_spoofing) it
+
+MAC addresses are not a reliable source for device fingerprinting.
+
+
+## Implementation details for IP address
+
+`Network.iPAddress()` returns the *local* IP address of the machine.
+
+On macOS, the strategy to determine IP address is to first look for a Wi-Fi interface. Then, if no Wi-Fi interface is
+found, then look for an Ethernet interface.
+
+### Can a device's IP address be used for fingerprinting?
+
+Due to many reasons:
+* changes a lot (joining/leaving network, DHCP)
+* not unique (LANs are typically allocated in private IP address ranges)
+
+IP addresses are not a reliable source for device fingerprinting.
 
 
 ## Implementation details for MachineID
@@ -101,8 +172,6 @@ retrieve the original machine ID from the application-specific one.
 
 #### Details for macOS IOPlatformUUID
 
-Tested on macOS Sonoma
-
 https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/TheRegistry/TheRegistry.html
 
 > Is there any official Apple documentation that says what the IOPlatformUUID means, and not just that it exists?
@@ -117,50 +186,12 @@ http://web.archive.org/web/20111210071506/http://www.afp548.com/article.php?stor
 
 #### Details for Windows MachineGuid
 
-Tested on Windows 11
-
 Possible issue: cloned machines can have the same MachineGuid
 
 https://www.reddit.com/r/sysadmin/comments/stvr5h/hklmsoftwaremicrosoftcryptography_machineguid/
 
 #### Details for Linux /dbus/machine-id
 
-Tested on Ubuntu 22.04.2
-
-Tested on Fedora 38
-
-Tested on Debian GNU Linux 12
-
 https://man7.org/linux/man-pages/man5/machine-id.5.html
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

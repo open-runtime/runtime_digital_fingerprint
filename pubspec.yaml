@@ -6,6 +6,12 @@ homepage: https://github.com/open-runtime/runtime_digital_fingerprint
 environment:
   sdk: ">=3.3.0 <4.0.0"
 
+# This package supports all platforms listed below.
+platforms:
+  linux:
+  macos:
+  windows:
+
 dev_dependencies:
   lints: ^4.0.0
   test: ^1.24.0
